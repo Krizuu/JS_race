@@ -1,0 +1,370 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>z 1</title>
+        <style>
+            body { margin: 0; padding: 0; font-size: 0; }
+            canvas { width: 100%; height: 100%; }
+        </style>
+
+
+
+    </head>
+    <body onload= 'start()'>
+
+    <div style="position: fixed; left:800px;  display: none; top:25px; z-index:1000; width:200px; font-size: 14px">Score: <span id='score'>0</span></div>
+    <div style="position: fixed; left:800px; display: none; top:50px; z-index:1000; width:200px; font-size: 14px">Life: <span id='life'>0</span></div>
+    <div style="position: fixed; left:800px; display: none; top:75px; z-index:1000; width:200px; font-size: 14px">Time: <span id='time'>0</span></div>
+	<div id = 'fuel' style="position: fixed; left: 10px; top: 200px; background: green; width: 200px; padding-top: 10px; font-size: 30px;"></div>
+        <script src="js/three.min.js"></script>
+        <script src="js/jquery.min.js"></script>
+        
+        <script>
+    var userid;
+    var score;
+    var highscore = 0;
+    var playername;
+    var gameidd = "Kriz";
+
+            var WIDTH = window.innerWidth;
+            var HEIGHT = window.innerHeight;
+
+            document.addEventListener('keydown',onDocumentKeyDown,false);
+            document.addEventListener('keyup',onDocumentKeyUp,false);
+
+            var up = false;
+            var down = false;
+            var left = false;
+            var right = false;
+
+            function onDocumentKeyDown(event){
+                event = event || window.event;
+                var keycode = event.keyCode;
+                switch(keycode){
+                case 37:
+                        left = true;
+                        break;
+                case 38 : 
+                        up = true;
+                        break;
+                case 39 : 
+                        right = true;
+                        break;
+                case 40 : 
+                        down = true;
+                        break;
+                }
+            }
+            function onDocumentKeyUp(event){
+                event = event || window.event;
+                var keycode = event.keyCode;
+                switch(keycode){
+                case 37 : 
+                        left = false;
+                        break;
+                case 38 : 
+                        up = false;
+                        break;
+                case 39 : 
+                        right = false;
+                        break;
+                case 40 : 
+                        down = false;
+                        break;
+                }
+            }
+function start(){
+		var user = prompt('Podaj nazwe uzytkownika:');
+		if(user == '') user = 'default';
+		data = {"name": user, "p0": gameidd}
+        playername = user;
+		// Spróbujmy Dodać nowego gracza
+		$.ajax({
+			 type: "PUT",
+			 dataType: "json",
+			 contentType: "application/json; charset=utf-8",
+			 data: JSON.stringify(data),
+			 url: "http://nowa.imsi.pl:5000/players",
+		 }).done(function(data){
+			 // Jeśli go nie dodało to znaczy, że jest bazie i trzeba pobrać jego dane-
+			 if (data.id == 0){
+                    console.log("stary");
+					 $.ajax({
+			 			 type: "GET",
+			 			 dataType: "json",
+			 			 contentType: "application/json; charset=utf-8",
+			 			 url: "http://nowa.imsi.pl:5000/player/" + user,
+			 		 }).done(function(data){
+							 data = data[0];
+                             highscore = data.p1;
+                             userid = data.id;
+
+						 })
+			 } else { // Jeśli udało się dodać to ustawiamy ID i zostawiamy high-score na 0
+                 userid = data.id;
+				 update_user(data.id, user, 0);
+                 console.log("nowy");
+			 }
+		 })}  
+            
+var gotxt = document.createElement("div");
+gotxt.style.position = "fixed";
+gotxt.style.background = "white";
+gotxt.style.padding = "20px";
+gotxt.style.fontSize = "30px";
+gotxt.style.diplay = "inline-block";
+gotxt.style.margin = "auto";
+gotxt.innerHTML = "KONIEC GRY!</br> Score: ";
+gotxt.style.top = "0";
+gotxt.style.bottom = "0";
+gotxt.style.left = "0";
+gotxt.style.right = "0";
+gotxt.style.width = "350px";
+gotxt.style.height = "180px";
+gotxt.style.color = "red";
+gotxt.style.textAlign = "center";
+gotxt.style.border = "8px solid red";
+gotxt.id = "gover";    
+
+            
+            
+
+
+     function update_user(user_id, username, points){
+		data = {'p1': points.toString(), 'id': user_id, 'p0': gameidd, 'name': username};
+		$.ajax({
+			 type: "PUT",
+			 dataType: "json",
+			 contentType: "application/json; charset=utf-8",
+			 data: JSON.stringify(data),
+			 url: "http://nowa.imsi.pl:5000/players/" + user_id,
+		 })
+	}          
+            
+            
+newhs = "";
+            
+ function end_game(user){
+	if(score > highscore) update_user(userid, playername, score);
+	//location.reload();
+}           
+ function gamelost() {
+	document.body.appendChild(gotxt);
+    if(score > highscore)
+        newhs = "NEW HIGHSCORE!";
+	gotxt.innerHTML +=  "<i><b>" + Math.floor(score).toString() + "</b></i></br>Player: " + playername + "</br>High score: " + Math.floor(highscore) + "</br>" + newhs;
+	speed = 0;
+	turn = 0;
+    end_game();
+}           
+            
+            
+            
+            
+            
+            var clock = new THREE.Clock;
+            dt=clock.getDelta();
+
+            var renderer = new THREE.WebGLRenderer({antialias:true});
+            renderer.setSize(WIDTH, HEIGHT);
+            renderer.setClearColor(0xDDDDDD, 1);
+            document.body.appendChild(renderer.domElement);
+            
+            
+
+            // SCENA
+            var scene = new THREE.Scene();
+
+            // KAMERA
+            var camera = new THREE.PerspectiveCamera(50, WIDTH/HEIGHT, 0.1, 10000);
+            camera.position.z = 5;
+            camera.position.y = -30;
+            camera.rotation.set(1.2,0,0);
+            scene.add(camera);
+
+            //TEKSTURA DROGI
+            var Texture = new THREE.TextureLoader().load( "road1.jpg" ); 
+            Texture.wrapS = THREE.RepeatWrapping; 
+            Texture.wrapT = THREE.RepeatWrapping; 
+            Texture.repeat.set( 1, 10 );
+
+            //WCZYTUJE MATERIAL DROGI
+            var Material = new THREE.MeshBasicMaterial( { map: Texture, side: THREE.DoubleSide } );
+            var Geometry = new THREE.PlaneGeometry(15, 200, 1, 1);
+            var plane = new THREE.Mesh(Geometry, Material); 
+            plane.material.map.offset.y = 0;
+            scene.add(plane);
+
+
+
+            
+            var boxGeometry = new THREE.BoxGeometry(1, 4, 1);
+            var phongMaterial = new THREE.MeshPhongMaterial({color: "green"});
+            var cube = new THREE.Mesh(boxGeometry, phongMaterial);
+            cube.position.y = 60;
+            cube.position.x = 0;
+            cube.position.z = 0;
+            scene.add(cube);
+            
+            var boxGeometryb = new THREE.BoxGeometry(1, 4, 1);
+            var phongMaterialb = new THREE.MeshPhongMaterial({color: "red"});
+            var cubeb = new THREE.Mesh(boxGeometryb, phongMaterialb);
+            cubeb.position.y = 40;
+            cubeb.position.x = -5;
+            cubeb.position.z = 0;
+            scene.add(cubeb);
+            
+            
+            // SWIATO
+            var light = new THREE.PointLight(0xFFFFFF);
+            light.position.set(-10, 10, 50);
+            scene.add(light);
+            
+            // ZMIENNE DO PORUSZANIA
+            var speed = 0;
+            var turn = 0;
+
+            var result = 0;
+            var flag = false;
+            var flagb = false;
+            var i=0;
+            var xpos = [-5,0,5];
+            
+		var fuel = 200;
+	
+            var score = 0;
+            var scoretxt = document.createElement("div");
+            scoretxt.style.position = "fixed";
+            scoretxt.style.background = "white";
+            scoretxt.style.padding = "10px";
+            scoretxt.style.left = "15px";
+            scoretxt.style.top = "15px";
+            scoretxt.style.fontSize = "30px";
+		scoretxt.style.width = "160px";
+            scoretxt.id = "score";
+            document.body.appendChild(scoretxt);
+            var life = 3;
+            var lifetxt = document.createElement("div");
+            lifetxt.style.position = "fixed";
+            lifetxt.style.background = "white";
+            lifetxt.style.padding = "10px";
+            lifetxt.style.left = "15px";
+            lifetxt.style.top = "60px";
+            lifetxt.style.fontSize = "30px";
+		lifetxt.style.width = "160px";
+            lifetxt.id = "life";           
+            document.body.appendChild(lifetxt);  
+            
+            
+            function render() {
+            scoretxt.innerHTML = "SCORE: " + Math.floor(score).toString();
+            lifetxt.innerHTML = "LIFE: " + Math.floor(life).toString();
+            
+                if(up == true) {
+                    if(speed < 0.07)
+                        speed += 0.001;
+                }
+                else {
+                    if(speed > 0) {
+                        if(down == true)
+                            {speed -= 0.001;}
+
+                        else{speed -= 0.0003;}
+                    }
+                    if(speed < 0.0005)
+                        speed = 0;
+                }        
+                if(right == true) { // prawy
+                    if(turn < 0.1) {
+                        turn += 0.02;
+                        //boxCar.rotation.set(0,0,-0.3);
+                    }
+                }
+                else {
+                    if(left == true)  { //lewy
+                        if(turn > -0.1) {
+                            turn -= 0.02;
+                            //boxCar.rotation.set(0,0,0.3);
+                        }
+                    }
+                    else { // nic
+                        if(turn > 0)
+                        {
+                            turn -= 0.005;
+                            //boxCar.rotation.set(0,0,0);
+                        }
+                        else if( turn < 0) {
+                            turn += 0.005;
+                            //boxCar.rotation.set(0,0,0); 
+                        }
+
+                    if(turn < 0.001 && turn > -0.001)
+                        turn = 0;
+                    }
+                }
+                if(camera.position.x < -7) {
+                    camera.position.x += 0.01;
+
+                    turn = 0;
+                }
+                if(camera.position.x > 7) {
+                    camera.position.x -= 0.01;
+
+                    turn = 0;
+                }
+
+                camera.position.x += turn * (speed / 0.1);
+
+                plane.material.map.offset.y += speed;
+                //times -=speed;
+                
+                if(((Math.abs(camera.position.x - cube.position.x)) <= 2) && ((Math.abs(camera.position.y - cube.position.y)) <= 0.5) && (flag == false)) {
+			fuel += 20;
+			
+			score += 1;
+			console.log("Result: " + score);
+		
+
+                    flag = true;
+                    //times +=5;
+                }
+                if(((Math.abs(camera.position.x - cubeb.position.x)) <= 2) && ((Math.abs(camera.position.y - cubeb.position.y)) <= 0.5) && (flagb == false)) {
+                    life -= 1;
+                    console.log("Lifes: " + life);
+                    flagb = true;
+                    if(life==0)
+                    {
+                            gamelost();
+                    }
+                }
+
+                if(cube.position.y < (Math.random() * ((-30) - (-300) + 1) + (-300))) {
+                    flag = false;
+                    var index = Math.floor(Math.random() * 3);
+                    cube.position.x=xpos[index];
+                    cube.position.y = 90;
+                }
+                
+                if(cubeb.position.y < (Math.random() * ((-30) - (-300) + 1) + (-300))) {
+                    flagb = false;
+                    var index = Math.floor(Math.random() * 3);
+                    cubeb.position.x=xpos[index];
+                    cubeb.position.y = 90;
+                }
+                cube.position.y -= speed * 14;
+                cubeb.position.y -= speed * 14;
+
+		document.getElementById('fuel').style.width = fuel.toString() + "px";
+    		fuel -= speed * 1;
+    		if(fuel <= -10)
+    		{
+        		gamelost();
+    		}
+                requestAnimationFrame(render)
+                renderer.render(scene, camera);
+            }
+            render();
+        </script>
+    </body>
+</html>
