@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>z 1</title>
+	<style>
+		body { margin: 0; padding: 0; font-size: 0; }
+		canvas { width: 100%; height: 100%; }
+	</style>
+</head>
+<body>
+<script src="js/three.min.js"></script>
+<script>
+	var WIDTH = window.innerWidth;
+	var HEIGHT = window.innerHeight;
+
+document.addEventListener('keydown',onDocumentKeyDown,false);
+document.addEventListener('keyup',onDocumentKeyUp,false);
+var vertical_speed_up = 0.1;
+var vertical_speed_down = 0.1;
+
+var horizontal_speed_left = 0.1;
+var horizontal_speed_right = 0.1;
+
+var resize_up_speed = 0.1;
+var resize_down_speed = 0.1;
+
+var key_rs_up = 0;
+var key_rs_down = 0;
+
+var key_up = 0;
+var key_down = 0;
+var key_left = 0;
+var key_right = 0;
+function onDocumentKeyDown(event){
+event = event || window.event;
+var keycode = event.keyCode;
+switch(keycode){
+case 37:
+	console.log("left down");
+	key_left = 1;
+break;
+case 38 : console.log("up down"   );
+	key_up = 1;
+	break;
+case 39 : console.log("right down");
+	key_right = 1;
+	break;
+case 40 : console.log("down down");
+	key_down = 1;
+	break;
+case 107: console.log("plus up");
+	key_rs_up = 1;
+	break;
+case 109: console.log("plus down");
+	key_rs_down = 1;
+	break;
+}
+
+}
+function onDocumentKeyUp(event){
+event = event || window.event;
+var keycode = event.keyCode;
+switch(keycode){
+case 37 : console.log("left up" );
+	key_left = 0;
+	break;
+case 38 : console.log("up up"   );
+	key_up = 0;
+	break;
+case 39 : console.log("right up");
+	key_right = 0;
+	break;
+case 40 : console.log("down up" );
+	key_down = 0;
+	break;
+case 107: console.log("plus up");
+	key_rs_up = 0;
+	break;
+case 109: console.log("plus down");
+	key_rs_down = 0;
+	break;
+}
+
+}   
+	var renderer = new THREE.WebGLRenderer({antialias:true});
+	renderer.setSize(WIDTH, HEIGHT);
+	renderer.setClearColor(0xDDDDDD, 1);
+	document.body.appendChild(renderer.domElement);
+
+	var scene = new THREE.Scene();
+
+	var camera = new THREE.PerspectiveCamera(50, WIDTH/HEIGHT, 0.1, 10000);
+	camera.position.z = 50;
+	scene.add(camera);
+
+	var boxGeometry = new THREE.BoxGeometry(10, 10, 10);
+	var phongMaterial = new THREE.MeshPhongMaterial({color: 0xFF0000});
+	var cube = new THREE.Mesh(boxGeometry, phongMaterial);
+	cube.position.x = -25;
+	cube.rotation.set(0.4, 0.2, 0);
+	scene.add(cube);
+
+	var light = new THREE.PointLight(0xFFFFFF);
+	light.position.set(-10, 15, 50);
+	scene.add(light);
+
+	var t = 0;
+	function render() {
+		requestAnimationFrame(render);
+		if(key_up)
+		{
+			if(vertical_speed_up < 1)
+			{
+				vertical_speed_up += 0.01;
+			}
+			cube.position.y +=	0.2 * Math.sin(vertical_speed_up);	
+		}
+		else
+		{
+			if(vertical_speed_up > 0.1)
+			{
+				vertical_speed_up -= 0.01;
+				cube.position.y +=	0.2 * Math.sin(vertical_speed_up);	
+			}
+		}
+		if(key_down)
+		{
+			if(vertical_speed_down < 1)
+			{
+				vertical_speed_down += 0.01;
+			}
+			cube.position.y -=	0.2 * Math.sin(vertical_speed_down);	
+		}
+		else
+		{
+			if(vertical_speed_down > 0.1)
+			{
+				vertical_speed_down -= 0.01;
+				cube.position.y -=	0.2 * Math.sin(vertical_speed_down);	
+			}
+		}
+		if(key_left)
+		{
+			if(horizontal_speed_left < 1)
+			{
+				horizontal_speed_left += 0.01;
+			}
+			cube.position.x -=	0.2 * Math.sin(horizontal_speed_left);	
+		}
+		else
+		{
+			if(horizontal_speed_left > 0.1)
+			{
+				horizontal_speed_left -= 0.01;
+				cube.position.x -=	0.2 * Math.sin(horizontal_speed_left);	
+			}
+		}
+		if(key_right)
+		{
+			if(horizontal_speed_right < 1)
+			{
+				horizontal_speed_right += 0.01;
+			}
+			cube.position.x +=	0.2 * Math.sin(horizontal_speed_right);	
+		}
+		else
+		{
+			if(horizontal_speed_right > 0.1)
+			{
+				horizontal_speed_right -= 0.01;
+				cube.position.x +=	0.2 * Math.sin(horizontal_speed_right);	
+			}
+		}
+		if(key_rs_up)
+		{
+			if( resize_up_speed < 1)
+			{
+				resize_up_speed += 0.01;
+			}
+			cube.position.z +=	0.2 * Math.sin(resize_up_speed);	
+		}
+		else
+		{
+			if(resize_up_speed > 0.1)
+			{
+				resize_up_speed -= 0.01;
+				cube.position.z +=	0.2 * Math.sin(resize_up_speed);	
+			}
+		}
+		if(key_rs_down)
+		{
+			if( resize_down_speed < 1)
+			{
+				resize_down_speed += 0.01;
+			}
+			cube.position.z -=	0.2 * Math.sin(resize_down_speed);	
+		}
+		else
+		{
+			if(resize_down_speed > 0.1)
+			{
+				resize_down_speed -= 0.01;
+				cube.position.z -=	0.2 * Math.sin(resize_down_speed);	
+			}
+		}
+		cube.rotation.y += 0.01;
+		renderer.render(scene, camera);
+	}
+	render();
+</script>
+</body>
+</html>
